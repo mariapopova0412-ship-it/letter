@@ -757,6 +757,7 @@
             let currentItemId = null;
             let isProcessing = false;
             let isGameComplete = false;
+            let flipTimer = null; // таймер для автоматического переворота
 
             // ===== DOM =====
             const container = document.getElementById('items-container');
@@ -816,7 +817,6 @@
                     osc.start(ctx.currentTime);
                     osc.stop(ctx.currentTime + 0.20);
 
-                    // второй тон для приятности
                     const osc2 = ctx.createOscillator();
                     const gain2 = ctx.createGain();
                     osc2.type = 'sine';
@@ -966,6 +966,7 @@
 
             // ===== КАРТОЧКА =====
             function showCard(data) {
+                // Сброс состояния
                 letterInput.value = '';
                 letterInput.disabled = false;
                 checkBtn.disabled = false;
@@ -974,16 +975,31 @@
                 wordPreview.textContent = data.pattern.split('').join(' ');
                 wordPreview.className = 'word-preview';
 
+                // Показываем лицевую сторону (убираем класс flipped)
                 flipContainer.classList.remove('flipped');
                 cardOverlay.classList.add('active');
 
-                setTimeout(() => {
-                    letterInput.focus();
-                    letterInput.select();
-                }, 400);
+                // Очищаем старый таймер переворота
+                if (flipTimer) {
+                    clearTimeout(flipTimer);
+                    flipTimer = null;
+                }
 
+                // Автоматический переворот через 0.7 сек
+                flipTimer = setTimeout(() => {
+                    flipContainer.classList.add('flipped');
+                    flipTimer = null;
+                    // После переворота даём фокус на поле ввода
+                    setTimeout(() => {
+                        letterInput.focus();
+                        letterInput.select();
+                    }, 400);
+                }, 700);
+
+                // Сохраняем текущий предмет
                 cardBack.dataset.itemId = data.id;
 
+                // Обработчики
                 checkBtn.onclick = function() {
                     handleCheck(data);
                 };
@@ -1063,6 +1079,7 @@
                     letterInput.disabled = false;
                     checkBtn.disabled = false;
                     isProcessing = false;
+                    // Возврат к первоначальному виду preview
                     setTimeout(() => {
                         wordPreview.textContent = data.pattern.split('').join(' ');
                         wordPreview.className = 'word-preview';
@@ -1074,6 +1091,11 @@
             }
 
             function closeCard() {
+                // Отменяем запланированный переворот, если ещё не произошёл
+                if (flipTimer) {
+                    clearTimeout(flipTimer);
+                    flipTimer = null;
+                }
                 cardOverlay.classList.remove('active');
                 flipContainer.classList.remove('flipped');
                 letterInput.value = '';
@@ -1083,7 +1105,7 @@
                 cardMessage.className = 'message hint';
                 cardMessage.textContent = 'Введи букву и нажми «Проверить»';
                 if (audioCtx && audioCtx.state === 'running') {
-                    // не закрываем
+                    // не закрываем, чтобы не создавать каждый раз
                 }
             }
 
