@@ -227,12 +227,7 @@
             line-height: 1.3;
             font-style: normal;
             padding: 8px 0;
-        }
-        .flipper .front .sub-icon {
-            font-size: clamp(44px, 10vw, 72px);
-            margin-bottom: 10px;
-            display: block;
-            line-height: 1;
+            max-width: 90%;
         }
 
         .flipper .back .back-label {
@@ -518,9 +513,6 @@
                     0 0 40px 14px rgba(255, 200, 120, 0.18),
                     0 4px 20px rgba(0, 0, 0, 0.30);
             }
-            #items-container .item-wrap {
-                /* размер задаётся через JS, но добавим touch-улучшения */
-            }
             .flipper .front,
             .flipper .back {
                 padding: 24px 18px;
@@ -678,8 +670,7 @@
             <div class="flipper" id="flipper">
                 <!-- ЛИЦЕВАЯ СТОРОНА -->
                 <div class="front">
-                    <span class="sub-icon">🌾</span>
-                    <h2>Выполни меня!</h2>
+                    <h2>вставь правильную букву и назови слово</h2>
                 </div>
                 <!-- ЗАДНЯЯ СТОРОНА -->
                 <div class="back" id="cardBack">
@@ -880,11 +871,8 @@
             function getItemSize() {
                 const w = window.innerWidth;
                 const isMobile = w < 768;
-                // 12-15% на десктопе, чуть крупнее на мобильных
                 let sizePercent = isMobile ? 17 : 13;
-                // планшеты
                 if (w >= 768 && w < 1024) sizePercent = 14;
-                // очень маленькие телефоны
                 if (w < 400) sizePercent = 20;
                 return Math.max(50, Math.min(160, w * sizePercent / 100));
             }
@@ -895,13 +883,10 @@
                 const h = window.innerHeight;
                 const padding = size * 0.6;
 
-                // Две клумбы: левая (30% от ширины) и правая (70% от ширины)
-                // Центры клумб по вертикали: 65% от высоты
                 const bedY = h * 0.62;
                 const leftX = w * 0.28;
                 const rightX = w * 0.72;
 
-                // Расположение 3 предметов на каждой клумбе (треугольником)
                 const offsets = [
                     { dx: -size * 0.9, dy: -size * 0.4 },
                     { dx: size * 0.9, dy: -size * 0.4 },
@@ -946,10 +931,8 @@
                         onItemClick(data.id);
                     });
                     wrap.addEventListener('touchend', function(e) {
-                        // защита от дублирования на мобильных
                         if (isProcessing || isGameComplete) return;
                         if (this.classList.contains('hidden')) return;
-                        // предотвращаем двойной клик
                         if (this.dataset.touched) return;
                         this.dataset.touched = '1';
                         setTimeout(() => delete this.dataset.touched, 300);
@@ -965,7 +948,6 @@
                 if (isProcessing) return;
                 const data = ITEMS_DATA.find(d => d.id === itemId);
                 if (!data) return;
-                // проверяем, не собран ли уже этот предмет
                 const wrap = getItemWrap(itemId);
                 if (!wrap || wrap.classList.contains('hidden')) return;
 
@@ -984,7 +966,6 @@
 
             // ===== КАРТОЧКА =====
             function showCard(data) {
-                // Сброс
                 letterInput.value = '';
                 letterInput.disabled = false;
                 checkBtn.disabled = false;
@@ -993,20 +974,16 @@
                 wordPreview.textContent = data.pattern.split('').join(' ');
                 wordPreview.className = 'word-preview';
 
-                // Показываем карточку (лицевая сторона)
                 flipContainer.classList.remove('flipped');
                 cardOverlay.classList.add('active');
 
-                // Фокус на поле ввода
                 setTimeout(() => {
                     letterInput.focus();
                     letterInput.select();
                 }, 400);
 
-                // Сохраняем текущий предмет
                 cardBack.dataset.itemId = data.id;
 
-                // Обработчики
                 checkBtn.onclick = function() {
                     handleCheck(data);
                 };
@@ -1016,12 +993,10 @@
                         handleCheck(data);
                     }
                 };
-                // Ограничиваем ввод только одной буквой
                 letterInput.oninput = function() {
                     if (this.value.length > 1) {
                         this.value = this.value.slice(0, 1);
                     }
-                    // Обновляем preview в реальном времени (без проверки)
                     const typed = this.value.toLowerCase().trim();
                     if (typed.length === 1) {
                         const preview = data.pattern.replace(/_/g, typed);
@@ -1054,40 +1029,33 @@
                 const isCorrect = (val === data.letter);
 
                 if (isCorrect) {
-                    // ПРАВИЛЬНО!
                     playPeek();
                     cardMessage.className = 'message correct';
                     cardMessage.textContent = '✅ Correct!';
 
-                    // Показываем полное слово
                     wordPreview.textContent = data.word.split('').join(' ');
                     wordPreview.className = 'word-preview filled';
 
-                    // Убираем предмет
                     const wrap = getItemWrap(data.id);
                     if (wrap) {
                         wrap.classList.add('hidden');
                     }
 
-                    // Звездочка
                     const idx = ITEMS_DATA.findIndex(d => d.id === data.id);
                     if (idx >= 0 && idx < starsEls.length) {
                         starsEls[idx].classList.add('earned');
                     }
                     starsEarned++;
 
-                    // Закрываем карточку через паузу
                     setTimeout(() => {
                         closeCard();
                         isProcessing = false;
-                        // Проверяем победу
                         if (starsEarned === totalItems) {
                             onGameComplete();
                         }
                     }, 700);
 
                 } else {
-                    // НЕПРАВИЛЬНО!
                     playWrong();
                     cardMessage.className = 'message wrong';
                     cardMessage.textContent = '❌ Try again!';
@@ -1095,7 +1063,6 @@
                     letterInput.disabled = false;
                     checkBtn.disabled = false;
                     isProcessing = false;
-                    // Возврат к первоначальной картинке (сброс preview)
                     setTimeout(() => {
                         wordPreview.textContent = data.pattern.split('').join(' ');
                         wordPreview.className = 'word-preview';
@@ -1113,12 +1080,10 @@
                 letterInput.disabled = false;
                 checkBtn.disabled = false;
                 currentItemId = null;
-                // Сброс сообщения
                 cardMessage.className = 'message hint';
                 cardMessage.textContent = 'Введи букву и нажми «Проверить»';
-                // Освобождаем аудиоконтекст
                 if (audioCtx && audioCtx.state === 'running') {
-                    // не закрываем, чтобы не создавать каждый раз
+                    // не закрываем
                 }
             }
 
@@ -1129,14 +1094,11 @@
 
                 playCelebration();
 
-                // Затемнение фона
                 overlay.classList.add('active');
 
-                // Показываем финальную клумбу
                 setTimeout(() => {
                     finalFlower.classList.add('active');
                     winMessage.classList.add('active');
-                    // Запускаем сердечки
                     spawnHearts();
                 }, 400);
             }
@@ -1151,7 +1113,6 @@
                 heartCount = 0;
                 if (heartInterval) clearInterval(heartInterval);
 
-                // Спавним пачками
                 function spawnBatch() {
                     const count = 3 + Math.floor(Math.random() * 4);
                     for (let i = 0; i < count; i++) {
@@ -1164,13 +1125,11 @@
                     }
                 }
 
-                // Первая пачка сразу
                 for (let i = 0; i < 8; i++) createHeart();
                 heartCount = 8;
 
                 heartInterval = setInterval(spawnBatch, 350);
 
-                // Останавливаем через некоторое время
                 setTimeout(() => {
                     if (heartInterval) {
                         clearInterval(heartInterval);
@@ -1198,7 +1157,6 @@
                 el.style.animationDelay = (Math.random() * 2) + 's';
                 heartsContainer.appendChild(el);
 
-                // Удаляем после анимации
                 setTimeout(() => {
                     if (el.parentNode) el.remove();
                 }, duration * 1000 + 2000);
@@ -1212,10 +1170,8 @@
                 resizeTimer = setTimeout(() => {
                     const items = container.querySelectorAll('.item-wrap:not(.hidden)');
                     const size = getItemSize();
-                    // Обновляем размеры видимых предметов
                     const allWraps = container.querySelectorAll('.item-wrap');
                     allWraps.forEach((el, idx) => {
-                        // Пересчитываем позиции
                         const data = ITEMS_DATA[idx];
                         if (!data) return;
                         const isHidden = el.classList.contains('hidden');
@@ -1254,16 +1210,13 @@
 
             // ===== ПЕРЕЗАПУСК (опционально) =====
             function resetGame() {
-                // Сброс состояния
                 starsEarned = 0;
                 isGameComplete = false;
                 isProcessing = false;
                 currentItemId = null;
 
-                // Сброс звёзд
                 starsEls.forEach(el => el.classList.remove('earned'));
 
-                // Скрыть финал
                 overlay.classList.remove('active');
                 finalFlower.classList.remove('active');
                 winMessage.classList.remove('active');
@@ -1273,7 +1226,6 @@
                     heartInterval = null;
                 }
 
-                // Показать все предметы
                 const wraps = container.querySelectorAll('.item-wrap');
                 wraps.forEach(el => {
                     el.classList.remove('hidden');
@@ -1282,38 +1234,31 @@
                     el.style.transform = '';
                 });
 
-                // Закрыть карточку
                 closeCard();
 
-                // Переразместить
                 setTimeout(() => handleResize(), 100);
             }
 
             // ===== ИНИЦИАЛИЗАЦИЯ =====
             function init() {
                 createItems();
-                // Скрываем финальные элементы
                 overlay.classList.remove('active');
                 finalFlower.classList.remove('active');
                 winMessage.classList.remove('active');
 
-                // Обработчики ресайза и ориентации
                 window.addEventListener('resize', handleResize);
                 window.addEventListener('orientationchange', function() {
                     setTimeout(handleResize, 400);
                 });
 
-                // Закрытие карточки по клику вне (но не на самой карточке)
                 cardOverlay.addEventListener('click', function(e) {
                     if (e.target === this) {
-                        // Закрываем только если не в процессе проверки
                         if (!isProcessing) {
                             closeCard();
                         }
                     }
                 });
 
-                // Клавиатура: Escape закрывает карточку
                 document.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape' && cardOverlay.classList.contains('active')) {
                         if (!isProcessing) {
@@ -1322,16 +1267,13 @@
                     }
                 });
 
-                // Обработка касаний на карточке для мобильных
                 const cardEl = document.querySelector('.flip-container');
                 if (cardEl) {
                     cardEl.addEventListener('touchstart', function(e) {
-                        // предотвращаем закрытие при касании внутри
                         e.stopPropagation();
                     });
                 }
 
-                // Если нажать на затемнение карточки — закрыть
                 document.addEventListener('touchstart', function(e) {
                     const overlay = document.getElementById('card-overlay');
                     if (overlay.classList.contains('active')) {
@@ -1350,18 +1292,14 @@
                 console.log('📦 Предметов: ' + totalItems);
             }
 
-            // Запуск
             document.addEventListener('DOMContentLoaded', init);
 
-            // Если DOM уже загружен
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', init);
             } else {
                 init();
             }
 
-            // ===== ДОПОЛНИТЕЛЬНО: КОРРЕКТНОЕ ОТОБРАЖЕНИЕ НА ДОСКАХ =====
-            // Для интерактивных досок — увеличенные цели
             const style = document.createElement('style');
             style.textContent = `
                 @media (pointer: coarse) {
@@ -1390,9 +1328,6 @@
                 }
             `;
             document.head.appendChild(style);
-
-            // ===== ПОДДЕРЖКА СЕНСОРНЫХ ЭКРАНОВ (двойной тап) =====
-            // Уже обработано в touchend с защитой
 
         })();
     </script>
