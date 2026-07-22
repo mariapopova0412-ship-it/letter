@@ -1,669 +1,1401 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0">
-  <title>Сборка урожая • Бабушкин чердак</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Сборка урожая</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    body {
-      font-family: 'Segoe UI', 'Georgia', 'Times New Roman', serif;
-      background: #3e2c1c;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      user-select: none;
-      position: relative;
-    }
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            font-style: normal;
+            background: #1a1410;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
 
-    /* ФОН ЧЕРДАКА */
-    .attic-background {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url('17847190276b5d.png');
-      background-size: cover;
-      background-position: center center;
-      background-repeat: no-repeat;
-      transition: filter 0.6s ease;
-      z-index: 0;
-    }
+        /* ===== ФОН ===== */
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('17847190276b5d.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 0;
+            overflow: hidden;
+        }
 
-    .attic-background.dimmed {
-      filter: brightness(0.35);
-    }
+        /* ===== ОВЕРЛЕЙ ДЛЯ ЗАТЕМНЕНИЯ ===== */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0);
+            z-index: 1;
+            pointer-events: none;
+            transition: background 1.2s ease;
+        }
+        #overlay.active {
+            background: rgba(0, 0, 0, 0.6);
+            pointer-events: auto;
+        }
 
-    /* Оверлей */
-    .dark-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      z-index: 5;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.6s ease;
-    }
+        /* ===== КОНТЕЙНЕР ПРЕДМЕТОВ ===== */
+        #items-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 2;
+            pointer-events: none;
+        }
+        #items-container .item-wrap {
+            position: absolute;
+            pointer-events: auto;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: transform 0.3s ease, opacity 0.5s ease;
+            will-change: transform;
+        }
+        #items-container .item-wrap.hidden {
+            opacity: 0;
+            transform: scale(0.6);
+            pointer-events: none;
+        }
+        #items-container .item-wrap img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow:
+                0 0 20px 8px rgba(255, 215, 140, 0.35),
+                0 0 50px 18px rgba(255, 200, 120, 0.20),
+                0 8px 32px rgba(0, 0, 0, 0.30);
+            transition: box-shadow 0.3s ease;
+            will-change: transform;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        #items-container .item-wrap:hover img {
+            box-shadow:
+                0 0 28px 12px rgba(255, 215, 140, 0.55),
+                0 0 60px 24px rgba(255, 200, 120, 0.30),
+                0 8px 40px rgba(0, 0, 0, 0.35);
+        }
 
-    .dark-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
+        /* ===== ПОКАЧИВАНИЕ ===== */
+        .sway {
+            animation: sway 2.8s ease-in-out infinite alternate;
+            transform-origin: center bottom;
+        }
+        .sway:nth-child(1) {
+            animation-delay: 0.0s;
+        }
+        .sway:nth-child(2) {
+            animation-delay: 0.4s;
+        }
+        .sway:nth-child(3) {
+            animation-delay: 0.8s;
+        }
+        .sway:nth-child(4) {
+            animation-delay: 0.2s;
+        }
+        .sway:nth-child(5) {
+            animation-delay: 0.6s;
+        }
+        .sway:nth-child(6) {
+            animation-delay: 1.0s;
+        }
 
-    /* КЛУМБЫ */
-    .garden-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 2;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-evenly;
-      align-items: center;
-      pointer-events: none;
-    }
+        @keyframes sway {
+            0% {
+                transform: rotate(-2.5deg) scale(1);
+            }
+            100% {
+                transform: rotate(2.5deg) scale(1.02);
+            }
+        }
 
-    .flowerbed {
-      width: 90%;
-      max-width: 1100px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-      gap: 4vw 3vw;
-      pointer-events: auto;
-    }
+        /* ===== КАРТОЧКА (FLIP) ===== */
+        #card-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            padding: 20px;
+        }
+        #card-overlay.active {
+            display: flex;
+            pointer-events: auto;
+        }
 
-    /* ПРЕДМЕТЫ */
-    .harvest-item {
-      width: clamp(85px, 13vw, 140px);
-      aspect-ratio: 1 / 1;
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      cursor: pointer;
-      border-radius: 18px;
-      box-shadow: 0 0 20px 5px rgba(255, 235, 180, 0.7), 0 0 40px 10px rgba(255, 215, 130, 0.5);
-      transition: transform 0.2s ease, box-shadow 0.3s ease, opacity 0.5s;
-      animation: gentleSway 3s infinite ease-in-out;
-      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
-      will-change: transform;
-      background-color: rgba(255, 245, 215, 0.1);
-    }
+        .flip-container {
+            perspective: 1200px;
+            width: min(460px, 92vw);
+            height: min(540px, 80vh);
+            pointer-events: none;
+        }
+        .flip-container.flipped .flipper {
+            transform: rotateY(180deg);
+        }
+        .flipper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+            pointer-events: none;
+        }
+        .flipper .front,
+        .flipper .back {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.50), 0 4px 20px rgba(0, 0, 0, 0.30);
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 28px;
+            background: #f7efe0;
+            background-image:
+                radial-gradient(ellipse at 20% 30%, rgba(235, 215, 185, 0.4) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 70%, rgba(220, 195, 160, 0.3) 0%, transparent 50%);
+            border: 2px solid #dac09a;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .flipper .front {
+            transform: rotateY(0deg);
+            background: #f5ede0;
+            background-image:
+                radial-gradient(ellipse at 30% 25%, rgba(235, 215, 185, 0.5) 0%, transparent 55%),
+                radial-gradient(ellipse at 70% 75%, rgba(220, 195, 160, 0.35) 0%, transparent 45%);
+            border-color: #d4b892;
+        }
+        .flipper .back {
+            transform: rotateY(180deg);
+            background: #f5ede0;
+            background-image:
+                radial-gradient(ellipse at 25% 20%, rgba(235, 215, 185, 0.5) 0%, transparent 55%),
+                radial-gradient(ellipse at 75% 80%, rgba(220, 195, 160, 0.35) 0%, transparent 45%);
+            border-color: #d4b892;
+        }
 
-    .harvest-item:nth-child(odd) {
-      animation-delay: 0s;
-    }
-    .harvest-item:nth-child(even) {
-      animation-delay: 1.5s;
-    }
+        .flipper .front h2 {
+            font-size: clamp(28px, 6vw, 52px);
+            font-weight: 700;
+            color: #3d2c1b;
+            text-align: center;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(255, 215, 160, 0.3);
+            line-height: 1.3;
+            font-style: normal;
+            padding: 8px 0;
+        }
+        .flipper .front .sub-icon {
+            font-size: clamp(44px, 10vw, 72px);
+            margin-bottom: 10px;
+            display: block;
+            line-height: 1;
+        }
 
-    @keyframes gentleSway {
-      0% {
-        transform: rotate(0deg) translateY(0);
-      }
-      25% {
-        transform: rotate(1.2deg) translateY(-3px);
-      }
-      75% {
-        transform: rotate(-0.9deg) translateY(2px);
-      }
-      100% {
-        transform: rotate(0deg) translateY(0);
-      }
-    }
+        .flipper .back .back-label {
+            font-size: clamp(18px, 3vw, 28px);
+            font-weight: 600;
+            color: #3d2c1b;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+            font-style: normal;
+            text-align: center;
+        }
+        .flipper .back .back-label small {
+            font-weight: 400;
+            color: #6b5340;
+            font-size: 0.85em;
+        }
+        .flipper .back .word-preview {
+            font-size: clamp(28px, 5vw, 46px);
+            font-weight: 700;
+            color: #2d1f12;
+            background: rgba(215, 190, 160, 0.25);
+            padding: 8px 24px;
+            border-radius: 16px;
+            margin: 4px 0 14px 0;
+            letter-spacing: 3px;
+            border: 1px dashed #b89878;
+            min-width: 80px;
+            text-align: center;
+            font-style: normal;
+            transition: all 0.3s ease;
+        }
+        .flipper .back .word-preview.filled {
+            border-color: #7d9f6e;
+            background: rgba(125, 159, 110, 0.15);
+            color: #2d5a1a;
+        }
 
-    .harvest-item.collected {
-      opacity: 0;
-      pointer-events: none;
-      animation: none;
-      box-shadow: 0 0 0 transparent;
-      transition: opacity 0.5s;
-    }
+        .flipper .back .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 300px;
+            gap: 10px;
+            margin: 6px 0 4px 0;
+        }
+        .flipper .back .input-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+        }
+        .flipper .back input[type="text"] {
+            font-size: clamp(22px, 4vw, 36px);
+            font-weight: 600;
+            padding: 8px 14px;
+            width: min(120px, 50%);
+            text-align: center;
+            border: 3px solid #c4a888;
+            border-radius: 16px;
+            background: rgba(255, 248, 235, 0.7);
+            color: #2d1f12;
+            outline: none;
+            transition: border 0.3s, box-shadow 0.3s;
+            font-style: normal;
+            height: min(64px, 12vh);
+            min-height: 48px;
+            letter-spacing: 2px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+        .flipper .back input[type="text"]:focus {
+            border-color: #b08050;
+            box-shadow: 0 0 0 4px rgba(180, 140, 100, 0.25), inset 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        .flipper .back input[type="text"]:disabled {
+            opacity: 0.5;
+        }
 
-    @media (max-width: 768px) {
-      .harvest-item {
-        width: clamp(95px, 20vw, 135px);
-      }
-      .flowerbed {
-        gap: 5vw 6vw;
-      }
-    }
+        .flipper .back .btn-check {
+            font-size: clamp(16px, 2.2vw, 22px);
+            font-weight: 600;
+            padding: 10px 28px;
+            min-height: 48px;
+            min-width: 48px;
+            border: none;
+            border-radius: 16px;
+            background: #c4a888;
+            color: #2d1f12;
+            cursor: pointer;
+            transition: background 0.25s, transform 0.15s, box-shadow 0.25s;
+            font-style: normal;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            touch-action: manipulation;
+            letter-spacing: 0.5px;
+        }
+        .flipper .back .btn-check:hover {
+            background: #d4b898;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+        }
+        .flipper .back .btn-check:active {
+            transform: scale(0.94);
+        }
+        .flipper .back .btn-check:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
 
-    /* КАРТОЧКА FLIP */
-    .flip-card-container {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: min(460px, 88vw);
-      height: auto;
-      min-height: 300px;
-      perspective: 1400px;
-      z-index: 20;
-      display: none;
-    }
+        .flipper .back .message {
+            font-size: clamp(16px, 2.4vw, 24px);
+            font-weight: 600;
+            min-height: 2.4em;
+            text-align: center;
+            padding: 6px 0;
+            font-style: normal;
+            transition: color 0.3s;
+        }
+        .flipper .back .message.correct {
+            color: #3d8a2a;
+        }
+        .flipper .back .message.wrong {
+            color: #b0453a;
+        }
+        .flipper .back .message.hint {
+            color: #7a654a;
+            font-weight: 400;
+        }
 
-    .flip-card {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
-      transform-style: preserve-3d;
-      border-radius: 24px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-    }
+        /* ===== ЗВЁЗДЫ ===== */
+        #stars-container {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: rgba(30, 22, 16, 0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            padding: 10px 22px;
+            border-radius: 60px;
+            border: 1px solid rgba(220, 190, 150, 0.25);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.30);
+        }
+        #stars-container .star {
+            font-size: clamp(28px, 5vw, 46px);
+            line-height: 1;
+            opacity: 0.20;
+            filter: grayscale(1);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: scale(0.7);
+            color: #cfb07a;
+            text-shadow: none;
+        }
+        #stars-container .star.earned {
+            opacity: 1;
+            filter: grayscale(0);
+            transform: scale(1);
+            color: #f7d44a;
+            text-shadow: 0 0 20px rgba(247, 212, 74, 0.50), 0 0 60px rgba(247, 212, 74, 0.20);
+            animation: starPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes starPop {
+            0% {
+                transform: scale(0.2) rotate(-30deg);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
 
-    .flip-card.flipped {
-      transform: rotateY(180deg);
-    }
+        /* ===== ФИНАЛЬНАЯ КЛУМБА ===== */
+        #final-flower {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.6);
+            z-index: 8;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 1.2s cubic-bezier(0.34, 1.2, 0.64, 1);
+            width: min(70vw, 500px);
+            aspect-ratio: 1/1;
+            border-radius: 24px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.50);
+        }
+        #final-flower.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+        }
+        #final-flower img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 24px;
+            display: block;
+        }
 
-    .card-face {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      backface-visibility: hidden;
-      border-radius: 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 1.5rem;
-      background: #f9efd7;
-      background-image: radial-gradient(circle at 20% 30%, #fff7e6 5%, #ecd59b 90%);
-      border: 2px solid #b48b4c;
-      box-shadow: inset 0 0 25px rgba(160, 100, 30, 0.4);
-      font-family: 'Georgia', 'Times New Roman', serif;
-      color: #3b2b17;
-    }
+        /* ===== СЕРДЕЧКИ ===== */
+        #hearts-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .heart-fall {
+            position: absolute;
+            top: -60px;
+            font-size: clamp(28px, 5vw, 52px);
+            animation: heartFall linear forwards;
+            opacity: 0;
+            text-shadow: 0 0 20px rgba(255, 100, 120, 0.3);
+            will-change: transform, opacity;
+            line-height: 1;
+        }
+        @keyframes heartFall {
+            0% {
+                transform: translateX(0) rotate(0deg) scale(0.3);
+                opacity: 0;
+            }
+            8% {
+                opacity: 1;
+                transform: translateX(8px) rotate(8deg) scale(1);
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(var(--drift)) rotate(var(--rot)) scale(0.8);
+                opacity: 0;
+                top: 110vh;
+            }
+        }
 
-    .card-front {
-      transform: rotateY(0deg);
-      font-size: clamp(2.2rem, 8vw, 3.2rem);
-      font-weight: bold;
-      text-align: center;
-      letter-spacing: 1px;
-      text-shadow: 1px 1px 0 white;
-      background: #f3e1b9;
-      background-image: linear-gradient(145deg, #f7e9c5, #dbb45c);
-    }
+        /* ===== СООБЩЕНИЕ О ПОБЕДЕ ===== */
+        #win-message {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.8);
+            z-index: 8;
+            font-size: clamp(24px, 5vw, 48px);
+            font-weight: 700;
+            color: #f7e8c0;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.50), 0 0 60px rgba(247, 212, 74, 0.15);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 1s cubic-bezier(0.34, 1.2, 0.64, 1);
+            font-style: normal;
+            letter-spacing: 2px;
+            text-align: center;
+            padding: 0 20px;
+            background: rgba(30, 22, 16, 0.30);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            padding: 12px 36px;
+            border-radius: 60px;
+            border: 1px solid rgba(220, 190, 150, 0.15);
+        }
+        #win-message.active {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+            pointer-events: none;
+        }
 
-    .card-back {
-      transform: rotateY(180deg);
-      justify-content: center;
-      gap: 1.2rem;
-      background: #faf0d7;
-      background-image: repeating-linear-gradient(45deg, #f3e3c9 0px, #f3e3c9 3px, #eedbba 3px, #eedbba 8px);
-    }
+        /* ===== АДАПТИВ ===== */
+        @media (max-width: 768px) {
+            #items-container .item-wrap img {
+                border-radius: 10px;
+                box-shadow:
+                    0 0 16px 6px rgba(255, 215, 140, 0.30),
+                    0 0 40px 14px rgba(255, 200, 120, 0.18),
+                    0 4px 20px rgba(0, 0, 0, 0.30);
+            }
+            #items-container .item-wrap {
+                /* размер задаётся через JS, но добавим touch-улучшения */
+            }
+            .flipper .front,
+            .flipper .back {
+                padding: 24px 18px;
+                border-radius: 24px;
+            }
+            .flipper .back .input-group {
+                max-width: 100%;
+            }
+            .flipper .back input[type="text"] {
+                width: min(100px, 45%);
+                font-size: clamp(20px, 5vw, 32px);
+                min-height: 52px;
+            }
+            .flipper .back .btn-check {
+                font-size: clamp(15px, 2.8vw, 20px);
+                padding: 10px 22px;
+                min-height: 48px;
+            }
+            #stars-container {
+                bottom: 16px;
+                padding: 8px 16px;
+                gap: 8px;
+                border-radius: 40px;
+            }
+            #stars-container .star {
+                font-size: clamp(24px, 6vw, 38px);
+            }
+            #card-overlay {
+                padding: 12px;
+            }
+            .flip-container {
+                width: min(400px, 95vw);
+                height: min(480px, 75vh);
+            }
+            #final-flower {
+                width: min(80vw, 400px);
+            }
+            #win-message {
+                bottom: 80px;
+                font-size: clamp(18px, 4.5vw, 32px);
+                padding: 10px 24px;
+            }
+        }
 
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      width: 85%;
-      margin: 0.2rem 0;
-    }
+        @media (max-width: 480px) {
+            .flip-container {
+                width: min(360px, 96vw);
+                height: min(440px, 72vh);
+            }
+            .flipper .front,
+            .flipper .back {
+                padding: 18px 14px;
+                border-radius: 20px;
+            }
+            .flipper .front h2 {
+                font-size: clamp(22px, 7vw, 34px);
+            }
+            .flipper .back .word-preview {
+                font-size: clamp(22px, 6vw, 34px);
+                padding: 6px 16px;
+            }
+            .flipper .back input[type="text"] {
+                width: min(80px, 40%);
+                font-size: clamp(18px, 5vw, 28px);
+                min-height: 44px;
+                padding: 6px 10px;
+            }
+            .flipper .back .btn-check {
+                font-size: clamp(14px, 3vw, 18px);
+                padding: 8px 18px;
+                min-height: 44px;
+            }
+            #stars-container {
+                bottom: 12px;
+                padding: 6px 14px;
+                gap: 6px;
+            }
+            #stars-container .star {
+                font-size: clamp(20px, 5.5vw, 30px);
+            }
+            #card-overlay {
+                padding: 8px;
+            }
+            #final-flower {
+                width: min(85vw, 320px);
+            }
+            #win-message {
+                bottom: 70px;
+                font-size: clamp(16px, 4vw, 26px);
+                padding: 8px 18px;
+            }
+        }
 
-    .input-group label {
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #4a3620;
-      margin-bottom: 0.2rem;
-      text-align: left;
-    }
+        @media (min-width: 1200px) {
+            #items-container .item-wrap img {
+                box-shadow:
+                    0 0 28px 12px rgba(255, 215, 140, 0.35),
+                    0 0 60px 24px rgba(255, 200, 120, 0.20),
+                    0 8px 40px rgba(0, 0, 0, 0.30);
+            }
+            .flip-container {
+                width: min(520px, 40vw);
+                height: min(580px, 70vh);
+            }
+        }
 
-    .input-group input {
-      padding: 0.9rem 1rem;
-      font-size: 1.4rem;
-      border: 2px solid #bb8b5c;
-      border-radius: 16px;
-      background: #fffef5;
-      outline: none;
-      text-align: center;
-      font-weight: 500;
-      letter-spacing: 0.5px;
-      color: #2d1f0c;
-      min-height: 48px;
-    }
+        /* ===== УТИЛИТЫ ===== */
+        .hidden {
+            display: none !important;
+        }
+        .no-click {
+            pointer-events: none !important;
+        }
 
-    .check-btn {
-      background: #daa520;
-      border: none;
-      color: white;
-      font-weight: bold;
-      font-size: 1.5rem;
-      padding: 0.9rem 2.2rem;
-      border-radius: 40px;
-      margin-top: 0.6rem;
-      cursor: pointer;
-      box-shadow: 0 6px 0 #7b5a2c, 0 10px 18px rgba(0, 0, 0, 0.3);
-      transition: all 0.1s ease;
-      letter-spacing: 1px;
-      min-height: 50px;
-      min-width: 140px;
-    }
-
-    .check-btn:active {
-      transform: translateY(4px);
-      box-shadow: 0 3px 0 #7b5a2c, 0 8px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .message-text {
-      font-size: 1.3rem;
-      margin-top: 0.4rem;
-      font-weight: bold;
-      min-height: 2rem;
-    }
-
-    /* ЗВЕЗДОЧКИ */
-    .star-panel {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-      z-index: 15;
-      background: rgba(58, 38, 18, 0.7);
-      backdrop-filter: blur(12px);
-      padding: 10px 26px;
-      border-radius: 60px;
-      border: 1px solid #deb887;
-    }
-
-    .star {
-      font-size: 2.6rem;
-      color: #b0a090;
-      text-shadow: 0 0 8px black;
-      transition: color 0.3s, text-shadow 0.3s;
-    }
-
-    .star.earned {
-      color: #ffd966;
-      text-shadow: 0 0 22px #ffb703, 0 0 8px #ffaa00;
-    }
-
-    /* ФИНАЛ */
-    .final-reward {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 25;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      pointer-events: none;
-    }
-
-    .reward-image {
-      max-width: min(420px, 72vw);
-      height: auto;
-      filter: drop-shadow(0 0 30px gold);
-      border-radius: 28px;
-      pointer-events: auto;
-    }
-
-    /* СЕРДЕЧКИ */
-    .hearts-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 30;
-      overflow: hidden;
-    }
-
-    .heart {
-      position: absolute;
-      font-size: 2rem;
-      animation: fallHeart 3s linear infinite;
-      opacity: 0.8;
-      color: #ff7b9c;
-    }
-
-    @keyframes fallHeart {
-      0% {
-        transform: translateY(-10vh) rotate(0deg);
-        opacity: 0.9;
-      }
-      100% {
-        transform: translateY(105vh) rotate(360deg);
-        opacity: 0;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .check-btn {
-        font-size: 1.3rem;
-        padding: 0.8rem 1.8rem;
-      }
-      .input-group input {
-        font-size: 1.2rem;
-      }
-    }
-  </style>
+        /* ===== СКРОЛЛ НА КАРТОЧКЕ ===== */
+        .flipper .front::-webkit-scrollbar,
+        .flipper .back::-webkit-scrollbar {
+            width: 4px;
+        }
+        .flipper .front::-webkit-scrollbar-track,
+        .flipper .back::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .flipper .front::-webkit-scrollbar-thumb,
+        .flipper .back::-webkit-scrollbar-thumb {
+            background: #c4a888;
+            border-radius: 10px;
+        }
+    </style>
 </head>
 <body>
-  <!-- Фон -->
-  <div class="attic-background" id="atticBg"></div>
-  <div class="dark-overlay" id="darkOverlay"></div>
 
-  <!-- Клумбы -->
-  <div class="garden-container" id="gardenContainer">
-    <div class="flowerbed" id="bedTop"></div>
-    <div class="flowerbed" id="bedBottom"></div>
-  </div>
+    <!-- ===== КОНТЕЙНЕР ИГРЫ ===== -->
+    <div id="game-container"></div>
 
-  <!-- Звездочки -->
-  <div class="star-panel" id="starPanel">
-    <span class="star" id="star1">★</span>
-    <span class="star" id="star2">★</span>
-    <span class="star" id="star3">★</span>
-    <span class="star" id="star4">★</span>
-    <span class="star" id="star5">★</span>
-    <span class="star" id="star6">★</span>
-  </div>
+    <!-- ===== ОВЕРЛЕЙ ===== -->
+    <div id="overlay"></div>
 
-  <!-- Карточка -->
-  <div class="flip-card-container" id="flipContainer">
-    <div class="flip-card" id="flipCard">
-      <div class="card-face card-front">
-        ✨ Выполни меня ✨
-      </div>
-      <div class="card-face card-back" id="cardBack">
-        <div class="input-group">
-          <label>🔤 Впиши букву</label>
-          <input type="text" id="letterInput" placeholder="" maxlength="1" autocomplete="off">
-        </div>
-        <div class="input-group">
-          <label>📖 Назови слово</label>
-          <input type="text" id="wordInput" placeholder="" maxlength="20" autocomplete="off">
-        </div>
-        <button class="check-btn" id="checkAnswerBtn">Проверить</button>
-        <div class="message-text" id="messageDisplay"></div>
-      </div>
+    <!-- ===== ПРЕДМЕТЫ ===== -->
+    <div id="items-container"></div>
+
+    <!-- ===== ЗВЁЗДЫ ===== -->
+    <div id="stars-container">
+        <span class="star" data-index="0">★</span>
+        <span class="star" data-index="1">★</span>
+        <span class="star" data-index="2">★</span>
+        <span class="star" data-index="3">★</span>
+        <span class="star" data-index="4">★</span>
+        <span class="star" data-index="5">★</span>
     </div>
-  </div>
 
-  <!-- Финал -->
-  <div class="final-reward" id="finalReward">
-    <img src="1784719111e214.png" alt="Готовая клумба" class="reward-image" id="rewardImage">
-  </div>
+    <!-- ===== КАРТОЧКА ===== -->
+    <div id="card-overlay">
+        <div class="flip-container" id="flipContainer">
+            <div class="flipper" id="flipper">
+                <!-- ЛИЦЕВАЯ СТОРОНА -->
+                <div class="front">
+                    <span class="sub-icon">🌾</span>
+                    <h2>Выполни меня!</h2>
+                </div>
+                <!-- ЗАДНЯЯ СТОРОНА -->
+                <div class="back" id="cardBack">
+                    <div class="back-label">📝 Впиши букву</div>
+                    <div class="input-group">
+                        <div class="input-row">
+                            <input type="text" id="letterInput" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="?">
+                            <button class="btn-check" id="checkBtn">Проверить</button>
+                        </div>
+                    </div>
+                    <div class="back-label" style="margin-top:8px; font-size:clamp(15px,2vw,20px);">
+                        <small>📖 Назови слово</small>
+                    </div>
+                    <div class="word-preview" id="wordPreview">_ _ _</div>
+                    <div class="message hint" id="cardMessage">Введи букву и нажми «Проверить»</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  <!-- Сердечки -->
-  <div class="hearts-container" id="heartsContainer"></div>
+    <!-- ===== ФИНАЛЬНАЯ КЛУМБА ===== -->
+    <div id="final-flower">
+        <img src="1784719111e214.png" alt="Клумба" id="finalFlowerImg">
+    </div>
 
-  <script>
-    (function() {
-      // --- ЗАДАНИЯ (файл : подсказка, правильная буква, правильное слово) ---
-      const tasks = [
-        { image: "1.png", clue: "_at", letter: "c", word: "cat" },
-        { image: "2.png", clue: "_nt", letter: "a", word: "ant" },
-        { image: "Рисунок3.png", clue: "_ed", letter: "b", word: "bed" },
-        { image: "Рисунок4.png", clue: "_og", letter: "d", word: "dog" },
-        { image: "Рисунок5.png", clue: "n_t", letter: "e", word: "net" },
-        { image: "Рисунок6.png", clue: "_lag", letter: "f", word: "flag" }
-      ];
+    <!-- ===== СЕРДЕЧКИ ===== -->
+    <div id="hearts-container"></div>
 
-      const totalItems = tasks.length;
-      let collectedCount = 0;
-      let activeItemIndex = null;
-      let currentTask = null;
+    <!-- ===== СООБЩЕНИЕ О ПОБЕДЕ ===== -->
+    <div id="win-message">🎉 Урожай собран! 🎉</div>
 
-      // DOM элементы
-      const atticBg = document.getElementById('atticBg');
-      const darkOverlay = document.getElementById('darkOverlay');
-      const bedTop = document.getElementById('bedTop');
-      const bedBottom = document.getElementById('bedBottom');
-      const starElements = [
-        document.getElementById('star1'),
-        document.getElementById('star2'),
-        document.getElementById('star3'),
-        document.getElementById('star4'),
-        document.getElementById('star5'),
-        document.getElementById('star6')
-      ];
-      const flipContainer = document.getElementById('flipContainer');
-      const flipCard = document.getElementById('flipCard');
-      const letterInput = document.getElementById('letterInput');
-      const wordInput = document.getElementById('wordInput');
-      const checkBtn = document.getElementById('checkAnswerBtn');
-      const messageDisplay = document.getElementById('messageDisplay');
-      const finalReward = document.getElementById('finalReward');
-      const heartsContainer = document.getElementById('heartsContainer');
+    <script>
+        (function() {
+            'use strict';
 
-      // --- AUDIO API ---
-      let audioCtx = null;
+            // ===== ДАННЫЕ ПРЕДМЕТОВ =====
+            const ITEMS_DATA = [{
+                id: 1,
+                file: '1.png',
+                pattern: '_at',
+                letter: 'c',
+                word: 'cat',
+                display: 'cat'
+            }, {
+                id: 2,
+                file: '2.png',
+                pattern: '_nt',
+                letter: 'a',
+                word: 'ant',
+                display: 'ant'
+            }, {
+                id: 3,
+                file: '3.png',
+                pattern: '_ed',
+                letter: 'b',
+                word: 'bed',
+                display: 'bed'
+            }, {
+                id: 4,
+                file: '4.png',
+                pattern: '_og',
+                letter: 'd',
+                word: 'dog',
+                display: 'dog'
+            }, {
+                id: 5,
+                file: '5.png',
+                pattern: 'n_t',
+                letter: 'e',
+                word: 'net',
+                display: 'net'
+            }, {
+                id: 6,
+                file: '6.png',
+                pattern: '_lag',
+                letter: 'f',
+                word: 'flag',
+                display: 'flag'
+            }];
 
-      function getAudioContext() {
-        if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        return audioCtx;
-      }
+            // ===== СОСТОЯНИЕ =====
+            let starsEarned = 0;
+            const totalItems = ITEMS_DATA.length;
+            let currentItemId = null;
+            let isProcessing = false;
+            let isGameComplete = false;
 
-      function playDingSound() {
-        try {
-          const ctx = getAudioContext();
-          const now = ctx.currentTime;
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(880, now);
-          osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
-          gain.gain.setValueAtTime(0.25, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.3);
-        } catch (e) {}
-      }
+            // ===== DOM =====
+            const container = document.getElementById('items-container');
+            const starsEls = document.querySelectorAll('#stars-container .star');
+            const cardOverlay = document.getElementById('card-overlay');
+            const flipContainer = document.getElementById('flipContainer');
+            const flipper = document.getElementById('flipper');
+            const cardBack = document.getElementById('cardBack');
+            const letterInput = document.getElementById('letterInput');
+            const checkBtn = document.getElementById('checkBtn');
+            const wordPreview = document.getElementById('wordPreview');
+            const cardMessage = document.getElementById('cardMessage');
+            const overlay = document.getElementById('overlay');
+            const finalFlower = document.getElementById('final-flower');
+            const heartsContainer = document.getElementById('hearts-container');
+            const winMessage = document.getElementById('win-message');
 
-      function playCorrectSound() {
-        try {
-          const ctx = getAudioContext();
-          const now = ctx.currentTime;
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(1047, now);
-          osc.frequency.setValueAtTime(1319, now + 0.1);
-          gain.gain.setValueAtTime(0.2, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.35);
-        } catch (e) {}
-      }
+            // ===== ЗВУКИ (Web Audio API) =====
+            let audioCtx = null;
 
-      function playWrongSound() {
-        try {
-          const ctx = getAudioContext();
-          const now = ctx.currentTime;
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(180, now);
-          gain.gain.setValueAtTime(0.18, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.4);
-        } catch (e) {}
-      }
-
-      // --- ПОСТРОЕНИЕ КЛУМБ ---
-      function buildGarden() {
-        bedTop.innerHTML = '';
-        bedBottom.innerHTML = '';
-        for (let i = 0; i < totalItems; i++) {
-          const itemDiv = document.createElement('div');
-          itemDiv.className = 'harvest-item';
-          itemDiv.dataset.index = i;
-          itemDiv.style.backgroundImage = `url('${tasks[i].image}')`;
-          itemDiv.addEventListener('click', (e) => onItemClick(i, e));
-
-          if (i < 3) {
-            bedTop.appendChild(itemDiv);
-          } else {
-            bedBottom.appendChild(itemDiv);
-          }
-        }
-      }
-
-      // --- КЛИК ПО ПРЕДМЕТУ ---
-      function onItemClick(index) {
-        if (collectedCount >= totalItems) return;
-        const itemElement = document.querySelector(`.harvest-item[data-index='${index}']`);
-        if (!itemElement || itemElement.classList.contains('collected')) return;
-
-        closeCard();
-        activeItemIndex = index;
-        currentTask = tasks[index];
-
-        letterInput.placeholder = currentTask.clue;
-        wordInput.placeholder = 'например, ' + currentTask.word;
-        letterInput.value = '';
-        wordInput.value = '';
-        messageDisplay.textContent = '';
-
-        flipContainer.style.display = 'block';
-        flipCard.classList.remove('flipped');
-        playDingSound();
-
-        setTimeout(() => {
-          flipCard.classList.add('flipped');
-        }, 40);
-      }
-
-      function closeCard() {
-        flipContainer.style.display = 'none';
-        flipCard.classList.remove('flipped');
-        activeItemIndex = null;
-        currentTask = null;
-      }
-
-      // --- ПРОВЕРКА ОТВЕТА ---
-      function checkAnswer() {
-        if (activeItemIndex === null || !currentTask) return;
-
-        const userLetter = letterInput.value.trim().toLowerCase();
-        const userWord = wordInput.value.trim().toLowerCase();
-        const correctLetter = currentTask.letter.toLowerCase();
-        const correctWord = currentTask.word.toLowerCase();
-
-        if (userLetter === correctLetter && userWord === correctWord) {
-          // Верно!
-          playCorrectSound();
-          messageDisplay.textContent = '✅ Correct!';
-          messageDisplay.style.color = '#2d5e2c';
-
-          const itemElement = document.querySelector(`.harvest-item[data-index='${activeItemIndex}']`);
-          if (itemElement) {
-            itemElement.classList.add('collected');
-          }
-
-          if (collectedCount < totalItems) {
-            starElements[collectedCount].classList.add('earned');
-            collectedCount++;
-          }
-
-          setTimeout(() => {
-            closeCard();
-            if (collectedCount === totalItems) {
-              triggerFinalReward();
+            function getAudioCtx() {
+                if (!audioCtx) {
+                    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                }
+                return audioCtx;
             }
-          }, 700);
-        } else {
-          // Ошибка
-          playWrongSound();
-          messageDisplay.textContent = '❌ Try again!';
-          messageDisplay.style.color = '#a13d2f';
-          letterInput.value = '';
-          wordInput.value = '';
-        }
-      }
 
-      // --- ФИНАЛ ---
-      function triggerFinalReward() {
-        atticBg.classList.add('dimmed');
-        darkOverlay.classList.add('active');
-        finalReward.style.display = 'flex';
-        startHearts();
+            function playDing() {
+                try {
+                    const ctx = getAudioCtx();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.25);
+                } catch (_) { /* тихо */ }
+            }
 
-        try {
-          const ctx = getAudioContext();
-          const now = ctx.currentTime;
-          [523, 659, 784].forEach((freq, i) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.value = freq;
-            gain.gain.setValueAtTime(0.15, now + i * 0.15);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 0.5);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(now + i * 0.15);
-            osc.stop(now + i * 0.15 + 0.55);
-          });
-        } catch (e) {}
-      }
+            function playPeek() {
+                try {
+                    const ctx = getAudioCtx();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1200, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1600, ctx.currentTime + 0.06);
+                    gain.gain.setValueAtTime(0.16, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.20);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.20);
 
-      function startHearts() {
-        heartsContainer.innerHTML = '';
-        for (let i = 0; i < 18; i++) {
-          const heart = document.createElement('div');
-          heart.className = 'heart';
-          heart.textContent = '❤️';
-          heart.style.left = Math.random() * 95 + '%';
-          heart.style.animationDuration = (Math.random() * 2 + 2.5) + 's';
-          heart.style.animationDelay = Math.random() * 1.5 + 's';
-          heart.style.fontSize = (Math.random() * 1.8 + 1.2) + 'rem';
-          heartsContainer.appendChild(heart);
-        }
-      }
+                    // второй тон для приятности
+                    const osc2 = ctx.createOscillator();
+                    const gain2 = ctx.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(1500, ctx.currentTime + 0.06);
+                    osc2.frequency.exponentialRampToValueAtTime(1800, ctx.currentTime + 0.12);
+                    gain2.gain.setValueAtTime(0.10, ctx.currentTime + 0.06);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+                    osc2.connect(gain2);
+                    gain2.connect(ctx.destination);
+                    osc2.start(ctx.currentTime + 0.06);
+                    osc2.stop(ctx.currentTime + 0.22);
+                } catch (_) { /* тихо */ }
+            }
 
-      // --- ОБРАБОТЧИКИ ---
-      checkBtn.addEventListener('click', checkAnswer);
+            function playWrong() {
+                try {
+                    const ctx = getAudioCtx();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.14, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.30);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.30);
+                } catch (_) { /* тихо */ }
+            }
 
-      letterInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') wordInput.focus();
-      });
-      wordInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') checkAnswer();
-      });
+            function playCelebration() {
+                try {
+                    const ctx = getAudioCtx();
+                    const notes = [523, 659, 784, 1047];
+                    notes.forEach((freq, i) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+                        gain.gain.setValueAtTime(0.10, ctx.currentTime + i * 0.12);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.25);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(ctx.currentTime + i * 0.12);
+                        osc.stop(ctx.currentTime + i * 0.12 + 0.25);
+                    });
+                } catch (_) { /* тихо */ }
+            }
 
-      // Закрытие карточки при клике мимо (опционально)
-      window.addEventListener('click', function(e) {
-        if (flipContainer.style.display === 'block') {
-          if (!e.target.closest('.flip-card-container') && !e.target.closest('.harvest-item')) {
-            // Можно оставить открытой, чтобы игрок не терял прогресс
-          }
-        }
-      });
+            // ===== РАЗМЕЩЕНИЕ ПРЕДМЕТОВ =====
+            function getItemSize() {
+                const w = window.innerWidth;
+                const isMobile = w < 768;
+                // 12-15% на десктопе, чуть крупнее на мобильных
+                let sizePercent = isMobile ? 17 : 13;
+                // планшеты
+                if (w >= 768 && w < 1024) sizePercent = 14;
+                // очень маленькие телефоны
+                if (w < 400) sizePercent = 20;
+                return Math.max(50, Math.min(160, w * sizePercent / 100));
+            }
 
-      // --- СТАРТ ---
-      buildGarden();
-    })();
-  </script>
+            function positionItems() {
+                const size = getItemSize();
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                const padding = size * 0.6;
+
+                // Две клумбы: левая (30% от ширины) и правая (70% от ширины)
+                // Центры клумб по вертикали: 65% от высоты
+                const bedY = h * 0.62;
+                const leftX = w * 0.28;
+                const rightX = w * 0.72;
+
+                // Расположение 3 предметов на каждой клумбе (треугольником)
+                const offsets = [
+                    { dx: -size * 0.9, dy: -size * 0.4 },
+                    { dx: size * 0.9, dy: -size * 0.4 },
+                    { dx: 0, dy: size * 0.6 }
+                ];
+
+                const items = container.querySelectorAll('.item-wrap');
+                items.forEach((el, idx) => {
+                    const data = ITEMS_DATA[idx];
+                    if (!data) return;
+                    const isLeft = idx < 3;
+                    const cx = isLeft ? leftX : rightX;
+                    const cy = bedY + (isLeft ? 0 : size * 0.1);
+                    const off = offsets[idx % 3];
+                    const x = cx + off.dx + (isLeft ? -size * 0.2 : size * 0.2);
+                    const y = cy + off.dy + (isLeft ? -size * 0.1 : size * 0.15);
+                    el.style.left = (x - size / 2) + 'px';
+                    el.style.top = (y - size / 2) + 'px';
+                    el.style.width = size + 'px';
+                    el.style.height = size + 'px';
+                    el.dataset.idx = idx;
+                });
+            }
+
+            // ===== СОЗДАНИЕ ПРЕДМЕТОВ =====
+            function createItems() {
+                container.innerHTML = '';
+                ITEMS_DATA.forEach((data, idx) => {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'item-wrap sway';
+                    wrap.dataset.id = data.id;
+                    wrap.dataset.idx = idx;
+                    const img = document.createElement('img');
+                    img.src = data.file;
+                    img.alt = 'Предмет ' + data.id;
+                    img.draggable = false;
+                    wrap.appendChild(img);
+                    wrap.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (isProcessing || isGameComplete) return;
+                        if (this.classList.contains('hidden')) return;
+                        onItemClick(data.id);
+                    });
+                    wrap.addEventListener('touchend', function(e) {
+                        // защита от дублирования на мобильных
+                        if (isProcessing || isGameComplete) return;
+                        if (this.classList.contains('hidden')) return;
+                        // предотвращаем двойной клик
+                        if (this.dataset.touched) return;
+                        this.dataset.touched = '1';
+                        setTimeout(() => delete this.dataset.touched, 300);
+                        onItemClick(data.id);
+                    });
+                    container.appendChild(wrap);
+                });
+                positionItems();
+            }
+
+            // ===== КЛИК ПО ПРЕДМЕТУ =====
+            function onItemClick(itemId) {
+                if (isProcessing) return;
+                const data = ITEMS_DATA.find(d => d.id === itemId);
+                if (!data) return;
+                // проверяем, не собран ли уже этот предмет
+                const wrap = getItemWrap(itemId);
+                if (!wrap || wrap.classList.contains('hidden')) return;
+
+                currentItemId = itemId;
+                playDing();
+                showCard(data);
+            }
+
+            function getItemWrap(itemId) {
+                const wraps = container.querySelectorAll('.item-wrap');
+                for (const w of wraps) {
+                    if (parseInt(w.dataset.id) === itemId) return w;
+                }
+                return null;
+            }
+
+            // ===== КАРТОЧКА =====
+            function showCard(data) {
+                // Сброс
+                letterInput.value = '';
+                letterInput.disabled = false;
+                checkBtn.disabled = false;
+                cardMessage.className = 'message hint';
+                cardMessage.textContent = 'Введи букву и нажми «Проверить»';
+                wordPreview.textContent = data.pattern.split('').join(' ');
+                wordPreview.className = 'word-preview';
+
+                // Показываем карточку (лицевая сторона)
+                flipContainer.classList.remove('flipped');
+                cardOverlay.classList.add('active');
+
+                // Фокус на поле ввода
+                setTimeout(() => {
+                    letterInput.focus();
+                    letterInput.select();
+                }, 400);
+
+                // Сохраняем текущий предмет
+                cardBack.dataset.itemId = data.id;
+
+                // Обработчики
+                checkBtn.onclick = function() {
+                    handleCheck(data);
+                };
+                letterInput.onkeydown = function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleCheck(data);
+                    }
+                };
+                // Ограничиваем ввод только одной буквой
+                letterInput.oninput = function() {
+                    if (this.value.length > 1) {
+                        this.value = this.value.slice(0, 1);
+                    }
+                    // Обновляем preview в реальном времени (без проверки)
+                    const typed = this.value.toLowerCase().trim();
+                    if (typed.length === 1) {
+                        const preview = data.pattern.replace(/_/g, typed);
+                        wordPreview.textContent = preview.split('').join(' ');
+                        wordPreview.className = 'word-preview filled';
+                    } else {
+                        wordPreview.textContent = data.pattern.split('').join(' ');
+                        wordPreview.className = 'word-preview';
+                    }
+                };
+            }
+
+            function handleCheck(data) {
+                if (isProcessing) return;
+                const val = letterInput.value.toLowerCase().trim();
+                if (val.length === 0) {
+                    cardMessage.className = 'message hint';
+                    cardMessage.textContent = '✏️ Введи букву!';
+                    return;
+                }
+                if (val.length > 1) {
+                    letterInput.value = val.slice(0, 1);
+                    return;
+                }
+
+                isProcessing = true;
+                letterInput.disabled = true;
+                checkBtn.disabled = true;
+
+                const isCorrect = (val === data.letter);
+
+                if (isCorrect) {
+                    // ПРАВИЛЬНО!
+                    playPeek();
+                    cardMessage.className = 'message correct';
+                    cardMessage.textContent = '✅ Correct!';
+
+                    // Показываем полное слово
+                    wordPreview.textContent = data.word.split('').join(' ');
+                    wordPreview.className = 'word-preview filled';
+
+                    // Убираем предмет
+                    const wrap = getItemWrap(data.id);
+                    if (wrap) {
+                        wrap.classList.add('hidden');
+                    }
+
+                    // Звездочка
+                    const idx = ITEMS_DATA.findIndex(d => d.id === data.id);
+                    if (idx >= 0 && idx < starsEls.length) {
+                        starsEls[idx].classList.add('earned');
+                    }
+                    starsEarned++;
+
+                    // Закрываем карточку через паузу
+                    setTimeout(() => {
+                        closeCard();
+                        isProcessing = false;
+                        // Проверяем победу
+                        if (starsEarned === totalItems) {
+                            onGameComplete();
+                        }
+                    }, 700);
+
+                } else {
+                    // НЕПРАВИЛЬНО!
+                    playWrong();
+                    cardMessage.className = 'message wrong';
+                    cardMessage.textContent = '❌ Try again!';
+                    letterInput.value = '';
+                    letterInput.disabled = false;
+                    checkBtn.disabled = false;
+                    isProcessing = false;
+                    // Возврат к первоначальной картинке (сброс preview)
+                    setTimeout(() => {
+                        wordPreview.textContent = data.pattern.split('').join(' ');
+                        wordPreview.className = 'word-preview';
+                        cardMessage.className = 'message hint';
+                        cardMessage.textContent = 'Введи букву и нажми «Проверить»';
+                        letterInput.focus();
+                    }, 400);
+                }
+            }
+
+            function closeCard() {
+                cardOverlay.classList.remove('active');
+                flipContainer.classList.remove('flipped');
+                letterInput.value = '';
+                letterInput.disabled = false;
+                checkBtn.disabled = false;
+                currentItemId = null;
+                // Сброс сообщения
+                cardMessage.className = 'message hint';
+                cardMessage.textContent = 'Введи букву и нажми «Проверить»';
+                // Освобождаем аудиоконтекст
+                if (audioCtx && audioCtx.state === 'running') {
+                    // не закрываем, чтобы не создавать каждый раз
+                }
+            }
+
+            // ===== ЗАВЕРШЕНИЕ ИГРЫ =====
+            function onGameComplete() {
+                if (isGameComplete) return;
+                isGameComplete = true;
+
+                playCelebration();
+
+                // Затемнение фона
+                overlay.classList.add('active');
+
+                // Показываем финальную клумбу
+                setTimeout(() => {
+                    finalFlower.classList.add('active');
+                    winMessage.classList.add('active');
+                    // Запускаем сердечки
+                    spawnHearts();
+                }, 400);
+            }
+
+            // ===== СЕРДЕЧКИ =====
+            let heartInterval = null;
+            let heartCount = 0;
+            const MAX_HEARTS = 60;
+
+            function spawnHearts() {
+                heartsContainer.innerHTML = '';
+                heartCount = 0;
+                if (heartInterval) clearInterval(heartInterval);
+
+                // Спавним пачками
+                function spawnBatch() {
+                    const count = 3 + Math.floor(Math.random() * 4);
+                    for (let i = 0; i < count; i++) {
+                        if (heartCount >= MAX_HEARTS) {
+                            clearInterval(heartInterval);
+                            return;
+                        }
+                        createHeart();
+                        heartCount++;
+                    }
+                }
+
+                // Первая пачка сразу
+                for (let i = 0; i < 8; i++) createHeart();
+                heartCount = 8;
+
+                heartInterval = setInterval(spawnBatch, 350);
+
+                // Останавливаем через некоторое время
+                setTimeout(() => {
+                    if (heartInterval) {
+                        clearInterval(heartInterval);
+                        heartInterval = null;
+                    }
+                }, 10000);
+            }
+
+            function createHeart() {
+                const el = document.createElement('div');
+                el.className = 'heart-fall';
+                const hearts = ['❤️', '💖', '💗', '💕', '♥️', '💝'];
+                el.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                const size = 28 + Math.random() * 36;
+                el.style.fontSize = size + 'px';
+                el.style.left = (5 + Math.random() * 90) + '%';
+                const duration = 6 + Math.random() * 8;
+                el.style.animationDuration = duration + 's';
+                const drift = (Math.random() - 0.5) * 300;
+                el.style.setProperty('--drift', drift + 'px');
+                const rot = (Math.random() - 0.5) * 720;
+                el.style.setProperty('--rot', rot + 'deg');
+                el.style.animationDelay = (Math.random() * 2) + 's';
+                heartsContainer.appendChild(el);
+
+                // Удаляем после анимации
+                setTimeout(() => {
+                    if (el.parentNode) el.remove();
+                }, duration * 1000 + 2000);
+            }
+
+            // ===== ОБНОВЛЕНИЕ РАЗМЕРОВ ПРИ РЕСАЙЗЕ =====
+            let resizeTimer = null;
+
+            function handleResize() {
+                if (resizeTimer) clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    const items = container.querySelectorAll('.item-wrap:not(.hidden)');
+                    const size = getItemSize();
+                    // Обновляем размеры видимых предметов
+                    const allWraps = container.querySelectorAll('.item-wrap');
+                    allWraps.forEach((el, idx) => {
+                        // Пересчитываем позиции
+                        const data = ITEMS_DATA[idx];
+                        if (!data) return;
+                        const isHidden = el.classList.contains('hidden');
+                        const w = window.innerWidth;
+                        const h = window.innerHeight;
+                        const padding = size * 0.6;
+                        const bedY = h * 0.62;
+                        const leftX = w * 0.28;
+                        const rightX = w * 0.72;
+                        const offsets = [
+                            { dx: -size * 0.9, dy: -size * 0.4 },
+                            { dx: size * 0.9, dy: -size * 0.4 },
+                            { dx: 0, dy: size * 0.6 }
+                        ];
+                        const isLeft = idx < 3;
+                        const cx = isLeft ? leftX : rightX;
+                        const cy = bedY + (isLeft ? 0 : size * 0.1);
+                        const off = offsets[idx % 3];
+                        const x = cx + off.dx + (isLeft ? -size * 0.2 : size * 0.2);
+                        const y = cy + off.dy + (isLeft ? -size * 0.1 : size * 0.15);
+                        el.style.left = (x - size / 2) + 'px';
+                        el.style.top = (y - size / 2) + 'px';
+                        el.style.width = size + 'px';
+                        el.style.height = size + 'px';
+                        if (isHidden) {
+                            el.style.opacity = '0';
+                            el.style.pointerEvents = 'none';
+                        } else {
+                            el.style.opacity = '1';
+                            el.style.pointerEvents = 'auto';
+                        }
+                    });
+                    resizeTimer = null;
+                }, 150);
+            }
+
+            // ===== ПЕРЕЗАПУСК (опционально) =====
+            function resetGame() {
+                // Сброс состояния
+                starsEarned = 0;
+                isGameComplete = false;
+                isProcessing = false;
+                currentItemId = null;
+
+                // Сброс звёзд
+                starsEls.forEach(el => el.classList.remove('earned'));
+
+                // Скрыть финал
+                overlay.classList.remove('active');
+                finalFlower.classList.remove('active');
+                winMessage.classList.remove('active');
+                heartsContainer.innerHTML = '';
+                if (heartInterval) {
+                    clearInterval(heartInterval);
+                    heartInterval = null;
+                }
+
+                // Показать все предметы
+                const wraps = container.querySelectorAll('.item-wrap');
+                wraps.forEach(el => {
+                    el.classList.remove('hidden');
+                    el.style.opacity = '1';
+                    el.style.pointerEvents = 'auto';
+                    el.style.transform = '';
+                });
+
+                // Закрыть карточку
+                closeCard();
+
+                // Переразместить
+                setTimeout(() => handleResize(), 100);
+            }
+
+            // ===== ИНИЦИАЛИЗАЦИЯ =====
+            function init() {
+                createItems();
+                // Скрываем финальные элементы
+                overlay.classList.remove('active');
+                finalFlower.classList.remove('active');
+                winMessage.classList.remove('active');
+
+                // Обработчики ресайза и ориентации
+                window.addEventListener('resize', handleResize);
+                window.addEventListener('orientationchange', function() {
+                    setTimeout(handleResize, 400);
+                });
+
+                // Закрытие карточки по клику вне (но не на самой карточке)
+                cardOverlay.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        // Закрываем только если не в процессе проверки
+                        if (!isProcessing) {
+                            closeCard();
+                        }
+                    }
+                });
+
+                // Клавиатура: Escape закрывает карточку
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && cardOverlay.classList.contains('active')) {
+                        if (!isProcessing) {
+                            closeCard();
+                        }
+                    }
+                });
+
+                // Обработка касаний на карточке для мобильных
+                const cardEl = document.querySelector('.flip-container');
+                if (cardEl) {
+                    cardEl.addEventListener('touchstart', function(e) {
+                        // предотвращаем закрытие при касании внутри
+                        e.stopPropagation();
+                    });
+                }
+
+                // Если нажать на затемнение карточки — закрыть
+                document.addEventListener('touchstart', function(e) {
+                    const overlay = document.getElementById('card-overlay');
+                    if (overlay.classList.contains('active')) {
+                        const rect = overlay.getBoundingClientRect();
+                        const touch = e.touches[0];
+                        if (touch) {
+                            const el = document.elementFromPoint(touch.clientX, touch.clientY);
+                            if (el === overlay) {
+                                if (!isProcessing) closeCard();
+                            }
+                        }
+                    }
+                });
+
+                console.log('🌾 Игра «Сборка урожая» загружена!');
+                console.log('📦 Предметов: ' + totalItems);
+            }
+
+            // Запуск
+            document.addEventListener('DOMContentLoaded', init);
+
+            // Если DOM уже загружен
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+            // ===== ДОПОЛНИТЕЛЬНО: КОРРЕКТНОЕ ОТОБРАЖЕНИЕ НА ДОСКАХ =====
+            // Для интерактивных досок — увеличенные цели
+            const style = document.createElement('style');
+            style.textContent = `
+                @media (pointer: coarse) {
+                    .item-wrap {
+                        min-width: 64px;
+                        min-height: 64px;
+                    }
+                    .item-wrap img {
+                        border-radius: 14px;
+                    }
+                    .btn-check {
+                        min-width: 56px;
+                        min-height: 56px;
+                    }
+                    input[type="text"] {
+                        min-height: 56px;
+                    }
+                }
+                @media (pointer: fine) and (min-width: 1200px) {
+                    .item-wrap {
+                        transition: transform 0.2s ease;
+                    }
+                    .item-wrap:hover {
+                        transform: scale(1.06);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+
+            // ===== ПОДДЕРЖКА СЕНСОРНЫХ ЭКРАНОВ (двойной тап) =====
+            // Уже обработано в touchend с защитой
+
+        })();
+    </script>
+
 </body>
 </html>
