@@ -32,16 +32,15 @@
       background-size: cover;
       background-position: center center;
       background-repeat: no-repeat;
-      transition: filter 0.5s ease, opacity 0.5s ease;
+      transition: filter 0.6s ease;
       z-index: 0;
     }
 
-    /* затемнение фона при победе */
     .attic-background.dimmed {
       filter: brightness(0.35);
     }
 
-    /* Оверлей (полупрозрачный слой) */
+    /* Оверлей */
     .dark-overlay {
       position: fixed;
       top: 0;
@@ -54,12 +53,13 @@
       opacity: 0;
       transition: opacity 0.6s ease;
     }
+
     .dark-overlay.active {
       opacity: 1;
       pointer-events: auto;
     }
 
-    /* ИГРОВОЕ ПОЛЕ С КЛУМБАМИ (две зоны) */
+    /* КЛУМБЫ */
     .garden-container {
       position: absolute;
       top: 0;
@@ -71,7 +71,7 @@
       flex-direction: column;
       justify-content: space-evenly;
       align-items: center;
-      pointer-events: none; /* клики будут на предметах */
+      pointer-events: none;
     }
 
     .flowerbed {
@@ -81,38 +81,47 @@
       flex-wrap: wrap;
       justify-content: center;
       align-items: center;
-      gap: 5vw 3vw;
+      gap: 4vw 3vw;
       pointer-events: auto;
-      position: relative;
     }
 
-    /* ПРЕДМЕТЫ (кликабельные объекты) */
+    /* ПРЕДМЕТЫ */
     .harvest-item {
-      width: clamp(80px, 13vw, 140px);
+      width: clamp(85px, 13vw, 140px);
       aspect-ratio: 1 / 1;
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
       cursor: pointer;
       border-radius: 18px;
-      box-shadow: 0 0 18px 4px rgba(255, 235, 190, 0.7), 0 0 35px 8px rgba(255, 215, 140, 0.5);
-      transition: transform 0.2s ease, box-shadow 0.3s ease, opacity 0.4s;
+      box-shadow: 0 0 20px 5px rgba(255, 235, 180, 0.7), 0 0 40px 10px rgba(255, 215, 130, 0.5);
+      transition: transform 0.2s ease, box-shadow 0.3s ease, opacity 0.5s;
       animation: gentleSway 3s infinite ease-in-out;
-      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
       will-change: transform;
-      background-color: rgba(255, 245, 215, 0.15);
-      backdrop-filter: blur(1px);
+      background-color: rgba(255, 245, 215, 0.1);
     }
 
-    /* Разные задержки анимации, чтобы качались несинхронно */
-    .harvest-item:nth-child(odd) { animation-delay: 0s; }
-    .harvest-item:nth-child(even) { animation-delay: 1.4s; }
+    .harvest-item:nth-child(odd) {
+      animation-delay: 0s;
+    }
+    .harvest-item:nth-child(even) {
+      animation-delay: 1.5s;
+    }
 
     @keyframes gentleSway {
-      0% { transform: rotate(0deg) translateY(0); }
-      25% { transform: rotate(1.2deg) translateY(-3px); }
-      75% { transform: rotate(-0.9deg) translateY(2px); }
-      100% { transform: rotate(0deg) translateY(0); }
+      0% {
+        transform: rotate(0deg) translateY(0);
+      }
+      25% {
+        transform: rotate(1.2deg) translateY(-3px);
+      }
+      75% {
+        transform: rotate(-0.9deg) translateY(2px);
+      }
+      100% {
+        transform: rotate(0deg) translateY(0);
+      }
     }
 
     .harvest-item.collected {
@@ -123,25 +132,24 @@
       transition: opacity 0.5s;
     }
 
-    /* Мобильные: предметы крупнее */
     @media (max-width: 768px) {
       .harvest-item {
-        width: clamp(90px, 18vw, 130px);
+        width: clamp(95px, 20vw, 135px);
       }
       .flowerbed {
-        gap: 4vw 5vw;
+        gap: 5vw 6vw;
       }
     }
 
-    /* КАРТОЧКА ЗАДАНИЯ (flip) */
+    /* КАРТОЧКА FLIP */
     .flip-card-container {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: min(480px, 85vw);
+      width: min(460px, 88vw);
       height: auto;
-      min-height: 320px;
+      min-height: 300px;
       perspective: 1400px;
       z-index: 20;
       display: none;
@@ -154,7 +162,7 @@
       transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
       transform-style: preserve-3d;
       border-radius: 24px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     }
 
     .flip-card.flipped {
@@ -171,7 +179,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 1.8rem;
+      padding: 2rem 1.5rem;
       background: #f9efd7;
       background-image: radial-gradient(circle at 20% 30%, #fff7e6 5%, #ecd59b 90%);
       border: 2px solid #b48b4c;
@@ -182,7 +190,7 @@
 
     .card-front {
       transform: rotateY(0deg);
-      font-size: clamp(2rem, 8vw, 3.2rem);
+      font-size: clamp(2.2rem, 8vw, 3.2rem);
       font-weight: bold;
       text-align: center;
       letter-spacing: 1px;
@@ -203,7 +211,7 @@
       display: flex;
       flex-direction: column;
       width: 85%;
-      margin: 0.3rem 0;
+      margin: 0.2rem 0;
     }
 
     .input-group label {
@@ -225,28 +233,29 @@
       font-weight: 500;
       letter-spacing: 0.5px;
       color: #2d1f0c;
+      min-height: 48px;
     }
 
     .check-btn {
-      background: #c99b4a;
+      background: #daa520;
       border: none;
       color: white;
       font-weight: bold;
       font-size: 1.5rem;
       padding: 0.9rem 2.2rem;
       border-radius: 40px;
-      margin-top: 0.8rem;
+      margin-top: 0.6rem;
       cursor: pointer;
-      box-shadow: 0 6px 0 #7b5a2c, 0 10px 18px rgba(0,0,0,0.3);
+      box-shadow: 0 6px 0 #7b5a2c, 0 10px 18px rgba(0, 0, 0, 0.3);
       transition: all 0.1s ease;
-      background: #daa520;
       letter-spacing: 1px;
       min-height: 50px;
+      min-width: 140px;
     }
 
     .check-btn:active {
       transform: translateY(4px);
-      box-shadow: 0 3px 0 #7b5a2c, 0 8px 12px rgba(0,0,0,0.3);
+      box-shadow: 0 3px 0 #7b5a2c, 0 8px 12px rgba(0, 0, 0, 0.3);
     }
 
     .message-text {
@@ -256,18 +265,18 @@
       min-height: 2rem;
     }
 
-    /* Блок звездочек */
+    /* ЗВЕЗДОЧКИ */
     .star-panel {
       position: fixed;
-      bottom: 18px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      gap: 12px;
+      gap: 10px;
       z-index: 15;
-      background: rgba(58, 38, 18, 0.65);
+      background: rgba(58, 38, 18, 0.7);
       backdrop-filter: blur(12px);
-      padding: 12px 28px;
+      padding: 10px 26px;
       border-radius: 60px;
       border: 1px solid #deb887;
     }
@@ -284,7 +293,7 @@
       text-shadow: 0 0 22px #ffb703, 0 0 8px #ffaa00;
     }
 
-    /* Финальная сцена */
+    /* ФИНАЛ */
     .final-reward {
       position: fixed;
       top: 50%;
@@ -300,14 +309,14 @@
     }
 
     .reward-image {
-      max-width: min(450px, 75vw);
+      max-width: min(420px, 72vw);
       height: auto;
-      filter: drop-shadow(0 0 28px gold);
-      border-radius: 32px;
+      filter: drop-shadow(0 0 30px gold);
+      border-radius: 28px;
       pointer-events: auto;
     }
 
-    /* Сердечки */
+    /* СЕРДЕЧКИ */
     .hearts-container {
       position: fixed;
       top: 0;
@@ -328,14 +337,23 @@
     }
 
     @keyframes fallHeart {
-      0% { transform: translateY(-10vh) rotate(0deg); opacity: 0.9; }
-      100% { transform: translateY(105vh) rotate(360deg); opacity: 0; }
+      0% {
+        transform: translateY(-10vh) rotate(0deg);
+        opacity: 0.9;
+      }
+      100% {
+        transform: translateY(105vh) rotate(360deg);
+        opacity: 0;
+      }
     }
 
     @media (max-width: 600px) {
       .check-btn {
         font-size: 1.3rem;
         padding: 0.8rem 1.8rem;
+      }
+      .input-group input {
+        font-size: 1.2rem;
       }
     }
   </style>
@@ -345,11 +363,9 @@
   <div class="attic-background" id="atticBg"></div>
   <div class="dark-overlay" id="darkOverlay"></div>
 
-  <!-- Клумбы с предметами -->
+  <!-- Клумбы -->
   <div class="garden-container" id="gardenContainer">
-    <!-- Верхняя клумба (3 предмета) -->
     <div class="flowerbed" id="bedTop"></div>
-    <!-- Нижняя клумба (3 предмета) -->
     <div class="flowerbed" id="bedBottom"></div>
   </div>
 
@@ -363,7 +379,7 @@
     <span class="star" id="star6">★</span>
   </div>
 
-  <!-- Карточка flip -->
+  <!-- Карточка -->
   <div class="flip-card-container" id="flipContainer">
     <div class="flip-card" id="flipCard">
       <div class="card-face card-front">
@@ -371,12 +387,12 @@
       </div>
       <div class="card-face card-back" id="cardBack">
         <div class="input-group">
-          <label>🐾 Впиши букву</label>
-          <input type="text" id="letterInput" placeholder="c_t" maxlength="4" autocomplete="off">
+          <label>🔤 Впиши букву</label>
+          <input type="text" id="letterInput" placeholder="" maxlength="1" autocomplete="off">
         </div>
         <div class="input-group">
           <label>📖 Назови слово</label>
-          <input type="text" id="wordInput" placeholder="cat" maxlength="20" autocomplete="off">
+          <input type="text" id="wordInput" placeholder="" maxlength="20" autocomplete="off">
         </div>
         <button class="check-btn" id="checkAnswerBtn">Проверить</button>
         <div class="message-text" id="messageDisplay"></div>
@@ -384,43 +400,32 @@
     </div>
   </div>
 
-  <!-- Финальная награда -->
+  <!-- Финал -->
   <div class="final-reward" id="finalReward">
     <img src="1784719111e214.png" alt="Готовая клумба" class="reward-image" id="rewardImage">
   </div>
 
-  <!-- Контейнер для сердечек -->
+  <!-- Сердечки -->
   <div class="hearts-container" id="heartsContainer"></div>
 
   <script>
     (function() {
-      // --- СЛОВАРЬ ЗАДАНИЙ ---
+      // --- ЗАДАНИЯ (файл : подсказка, правильная буква, правильное слово) ---
       const tasks = [
-        { clue: "c_t", answerLetter: "a", answerWord: "cat" },
-        { clue: "_nt", answerLetter: "a", answerWord: "ant" },
-        { clue: "b_d", answerLetter: "e", answerWord: "bed" },
-        { clue: "_og", answerLetter: "d", answerWord: "dog" },
-        { clue: "n_t", answerLetter: "u", answerWord: "nut" },
-        { clue: "_lag", answerLetter: "f", answerWord: "flag" }
+        { image: "1.png", clue: "_at", letter: "c", word: "cat" },
+        { image: "2.png", clue: "_nt", letter: "a", word: "ant" },
+        { image: "Рисунок3.png", clue: "_ed", letter: "b", word: "bed" },
+        { image: "Рисунок4.png", clue: "_og", letter: "d", word: "dog" },
+        { image: "Рисунок5.png", clue: "n_t", letter: "e", word: "net" },
+        { image: "Рисунок6.png", clue: "_lag", letter: "f", word: "flag" }
       ];
 
-      // Файлы предметов (предполагаем, что называются соответственно, но можно заменить)
-      const itemImages = [
-        "cat_item.png",   // условно
-        "ant_item.png",
-        "bed_item.png",
-        "dog_item.png",
-        "nut_item.png",
-        "flag_item.png"
-      ];
-
-      // Состояние
+      const totalItems = tasks.length;
       let collectedCount = 0;
-      const totalItems = 6;
       let activeItemIndex = null;
       let currentTask = null;
 
-      // Элементы DOM
+      // DOM элементы
       const atticBg = document.getElementById('atticBg');
       const darkOverlay = document.getElementById('darkOverlay');
       const bedTop = document.getElementById('bedTop');
@@ -442,12 +447,14 @@
       const finalReward = document.getElementById('finalReward');
       const heartsContainer = document.getElementById('heartsContainer');
 
-      // Аудио контекст
+      // --- AUDIO API ---
       let audioCtx = null;
+
       function getAudioContext() {
         if (!audioCtx) {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
         return audioCtx;
       }
 
@@ -504,18 +511,17 @@
         } catch (e) {}
       }
 
-      // Создание предметов на клумбах
+      // --- ПОСТРОЕНИЕ КЛУМБ ---
       function buildGarden() {
         bedTop.innerHTML = '';
         bedBottom.innerHTML = '';
-        // Распределим по 3 предмета в каждую клумбу
         for (let i = 0; i < totalItems; i++) {
           const itemDiv = document.createElement('div');
           itemDiv.className = 'harvest-item';
           itemDiv.dataset.index = i;
-          itemDiv.style.backgroundImage = `url('${itemImages[i]}')`;
+          itemDiv.style.backgroundImage = `url('${tasks[i].image}')`;
           itemDiv.addEventListener('click', (e) => onItemClick(i, e));
-          
+
           if (i < 3) {
             bedTop.appendChild(itemDiv);
           } else {
@@ -524,34 +530,26 @@
         }
       }
 
-      // Обработка клика по предмету
-      function onItemClick(index, event) {
+      // --- КЛИК ПО ПРЕДМЕТУ ---
+      function onItemClick(index) {
         if (collectedCount >= totalItems) return;
         const itemElement = document.querySelector(`.harvest-item[data-index='${index}']`);
         if (!itemElement || itemElement.classList.contains('collected')) return;
-        
-        // Если уже открыта карточка, закрываем сначала
+
         closeCard();
-        
         activeItemIndex = index;
         currentTask = tasks[index];
-        
-        // Заполняем подсказку в поле ввода буквы (placeholder)
+
         letterInput.placeholder = currentTask.clue;
-        wordInput.placeholder = "например, " + currentTask.answerWord;
+        wordInput.placeholder = 'например, ' + currentTask.word;
         letterInput.value = '';
         wordInput.value = '';
         messageDisplay.textContent = '';
-        
-        // Показываем карточку и переворачиваем
+
         flipContainer.style.display = 'block';
-        // сброс переворота если был
         flipCard.classList.remove('flipped');
-        
-        // звук дзынь
         playDingSound();
-        
-        // Небольшая задержка для анимации переворота
+
         setTimeout(() => {
           flipCard.classList.add('flipped');
         }, 40);
@@ -564,37 +562,33 @@
         currentTask = null;
       }
 
-      // Проверка ответа
+      // --- ПРОВЕРКА ОТВЕТА ---
       function checkAnswer() {
         if (activeItemIndex === null || !currentTask) return;
-        
+
         const userLetter = letterInput.value.trim().toLowerCase();
         const userWord = wordInput.value.trim().toLowerCase();
-        const correctLetter = currentTask.answerLetter.toLowerCase();
-        const correctWord = currentTask.answerWord.toLowerCase();
-        
+        const correctLetter = currentTask.letter.toLowerCase();
+        const correctWord = currentTask.word.toLowerCase();
+
         if (userLetter === correctLetter && userWord === correctWord) {
           // Верно!
           playCorrectSound();
           messageDisplay.textContent = '✅ Correct!';
           messageDisplay.style.color = '#2d5e2c';
-          
-          // Отмечаем предмет собранным
+
           const itemElement = document.querySelector(`.harvest-item[data-index='${activeItemIndex}']`);
           if (itemElement) {
             itemElement.classList.add('collected');
           }
-          
-          // Добавляем звездочку
+
           if (collectedCount < totalItems) {
             starElements[collectedCount].classList.add('earned');
             collectedCount++;
           }
-          
-          // Закрываем карточку через короткое время
+
           setTimeout(() => {
             closeCard();
-            // Проверка на полную сборку
             if (collectedCount === totalItems) {
               triggerFinalReward();
             }
@@ -609,19 +603,13 @@
         }
       }
 
-      // Финальная сцена
+      // --- ФИНАЛ ---
       function triggerFinalReward() {
-        // Затемнение фона
         atticBg.classList.add('dimmed');
         darkOverlay.classList.add('active');
-        
-        // Показываем картинку клумбы
         finalReward.style.display = 'flex';
-        
-        // Запускаем сердечки
         startHearts();
-        
-        // Дополнительно можно воспроизвести приятный аккорд
+
         try {
           const ctx = getAudioContext();
           const now = ctx.currentTime;
@@ -654,22 +642,27 @@
         }
       }
 
-      // Обработчик кнопки проверки
+      // --- ОБРАБОТЧИКИ ---
       checkBtn.addEventListener('click', checkAnswer);
-      
-      // Закрытие карточки по клику вне? (опционально, но оставим только по завершению)
+
+      letterInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') wordInput.focus();
+      });
+      wordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') checkAnswer();
+      });
+
+      // Закрытие карточки при клике мимо (опционально)
       window.addEventListener('click', function(e) {
         if (flipContainer.style.display === 'block') {
           if (!e.target.closest('.flip-card-container') && !e.target.closest('.harvest-item')) {
-            // не закрываем автоматически, чтобы не сбить. Можно оставить.
+            // Можно оставить открытой, чтобы игрок не терял прогресс
           }
         }
       });
 
-      // Инициализация
+      // --- СТАРТ ---
       buildGarden();
-      
-      // На случай ресайза ничего не ломаем
     })();
   </script>
 </body>
